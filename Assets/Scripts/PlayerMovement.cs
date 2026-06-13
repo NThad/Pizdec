@@ -48,18 +48,23 @@ public class PlayerMovement : MonoBehaviour
             && stamina > 0
             && z > 0;
 
-        float currentSpeed =
-            isRunning
-            ? sprintSpeed
-            : speed;
+        
         if (isRunning)
-        {
+        {   
             stamina -= staminaDrain * Time.deltaTime;
+            if(stamina<=1f)
+            {   
+                isRunning = false;
+            }
         }
         else
         {
             stamina += staminaRegen * Time.deltaTime;
         }
+        float currentSpeed =
+            isRunning
+            ? sprintSpeed
+            : speed;
 
         stamina = Mathf.Clamp(
             stamina,
@@ -67,7 +72,7 @@ public class PlayerMovement : MonoBehaviour
             maxStamina
         );
 
-        Debug.Log(stamina);
+        
         
         Vector3 move = transform.right * x + transform.forward * z;
 
