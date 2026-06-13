@@ -1,0 +1,29 @@
+# Unity
+Library/
+Temp/
+Obj/
+Builds/
+Logs/
+*.log
+*.pidb
+*.svd
+
+# Unity generated files
+*.csproj
+*.sln
+*.unitypackage
+*.prefab.meta
+*.asset.meta
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Other
+*.tmp
+*.temp
