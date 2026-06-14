@@ -21,8 +21,9 @@ public class PlayerOilLamp : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.F))
         {
             lampOn = !lampOn;
-
+            Debug.Log("вкл");
             oilLamp.SetActive(lampOn);
+            
         }
 
         // расход масла

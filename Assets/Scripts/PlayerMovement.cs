@@ -101,8 +101,10 @@ public class PlayerMovement : MonoBehaviour
             RaycastHit hit;
 
             if (Physics.Raycast(ray, out hit, 3f))
-            {
-                Interactable interactable = hit.collider.GetComponent<Interactable>();
+            {   
+                Debug.Log("Попал в: " + hit.collider.name);
+                Interactable interactable =
+                    hit.collider.GetComponentInParent<Interactable>();
 
                 if (interactable != null)
                 {
