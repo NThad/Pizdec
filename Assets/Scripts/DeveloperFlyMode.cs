@@ -1,66 +1,132 @@
 using UnityEngine;
 
+/// <summary>
+/// Дебаг-камера для облёта карты. Не персонаж: noclip, без гравитации и без CharacterController.
+/// F1 — вкл/выкл. Пока включена: PlayerMovement выключен.
+/// WASD — полёт по взгляду, Space/E — вверх, Ctrl/Q — вниз, Shift — ускорение, колесо — скорость.
+/// </summary>
 public class DeveloperFlyMode : MonoBehaviour
 {
-    [Header("Developer Fly Mode")]
-    public float moveSpeed = 50f;        // Обычная скорость
-    public float fastMoveSpeed = 120f;   // Ускоренная (Shift)
-    public float lookSpeed = 3f;
+    [Header("Управление")]
+    public KeyCode toggleKey = KeyCode.F1;
+    public bool startEnabled = true;
+    public float moveSpeed = 25f;
+    public float fastMultiplier = 4f;
+    public float lookSensitivity = 2.2f;
+    public float minPitch = -89f;
+    public float maxPitch = 89f;
 
-    private bool isEnabled = true;
-    private CharacterController controller;
+    [Header("Камера (если пусто — дочерняя или Main)")]
+    public Camera flyCamera;
 
-    void Start()
+    bool flyEnabled;
+    float yaw;
+    float pitch;
+    float currentSpeed;
+
+    CharacterController characterController;
+    PlayerMovement playerMovement;
+    Transform pitchPivot;
+
+    void Awake()
     {
-        controller = GetComponent<CharacterController>();
-        if (controller == null)
-        {
-            controller = gameObject.AddComponent<CharacterController>();
-            controller.height = 1.8f;
-            controller.radius = 0.5f;
-        }
+        characterController = GetComponent<CharacterController>();
+        playerMovement = GetComponent<PlayerMovement>();
 
-        // Убираем курсор
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
+        if (flyCamera == null)
+            flyCamera = GetComponentInChildren<Camera>();
+        if (flyCamera == null)
+            flyCamera = Camera.main;
+
+        pitchPivot = flyCamera != null ? flyCamera.transform : transform;
+
+        Vector3 euler = transform.eulerAngles;
+        yaw = euler.y;
+        pitch = 0f;
+        currentSpeed = moveSpeed;
+
+        flyEnabled = startEnabled;
+        ApplyFlyState();
     }
 
     void Update()
     {
-        if (!isEnabled) return;
-
-        // Переключение режима (F1)
-        if (Input.GetKeyDown(KeyCode.F1))
+        if (Input.GetKeyDown(toggleKey))
         {
-            isEnabled = !isEnabled;
-            Cursor.lockState = isEnabled ? CursorLockMode.Locked : CursorLockMode.None;
-            Cursor.visible = !isEnabled;
-            Debug.Log("Developer Fly Mode: " + (isEnabled ? "ВКЛ" : "ВЫКЛ"));
-            return;
+            flyEnabled = !flyEnabled;
+            ApplyFlyState();
+            Debug.Log(flyEnabled
+                ? "Debug Fly: ВКЛ (F1 выключить)"
+                : "Debug Fly: ВЫКЛ (F1 включить)");
         }
 
-        if (!isEnabled) return;
+        if (!flyEnabled)
+            return;
 
-        // Движение
-        float speed = Input.GetKey(KeyCode.LeftShift) ? fastMoveSpeed : moveSpeed;
+        yaw += Input.GetAxisRaw("Mouse X") * lookSensitivity;
+        pitch -= Input.GetAxisRaw("Mouse Y") * lookSensitivity;
+        pitch = Mathf.Clamp(pitch, minPitch, maxPitch);
 
-        float horizontal = Input.GetAxis("Horizontal");
-        float vertical = Input.GetAxis("Vertical");
+        // Тело только по Y — не задираем игрока вверх. Наклон только у камеры.
+        transform.rotation = Quaternion.Euler(0f, yaw, 0f);
+        if (pitchPivot != null && pitchPivot != transform)
+            pitchPivot.localRotation = Quaternion.Euler(pitch, 0f, 0f);
 
-        Vector3 move = transform.right * horizontal + transform.forward * vertical;
-        controller.Move(move * speed * Time.deltaTime);
+        float scroll = Input.mouseScrollDelta.y;
+        if (Mathf.Abs(scroll) > 0.01f)
+            currentSpeed = Mathf.Clamp(currentSpeed * (scroll > 0f ? 1.15f : 0.87f), 2f, 200f);
 
-        // Полёт вверх/вниз
-        if (Input.GetKey(KeyCode.Space))
-            controller.Move(Vector3.up * speed * Time.deltaTime);
-        if (Input.GetKey(KeyCode.LeftControl))
-            controller.Move(Vector3.down * speed * Time.deltaTime);
+        float speed = currentSpeed;
+        if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
+            speed *= fastMultiplier;
 
-        // Вращение камеры
-        float mouseX = Input.GetAxis("Mouse X") * lookSpeed;
-        float mouseY = Input.GetAxis("Mouse Y") * lookSpeed;
+        Vector3 local = Vector3.zero;
+        if (Input.GetKey(KeyCode.W)) local += Vector3.forward;
+        if (Input.GetKey(KeyCode.S)) local += Vector3.back;
+        if (Input.GetKey(KeyCode.A)) local += Vector3.left;
+        if (Input.GetKey(KeyCode.D)) local += Vector3.right;
 
-        transform.Rotate(Vector3.up * mouseX, Space.World);
-        transform.Rotate(Vector3.left * mouseY, Space.Self);
+        float up = 0f;
+        if (Input.GetKey(KeyCode.E) || Input.GetKey(KeyCode.Space)) up += 1f;
+        if (Input.GetKey(KeyCode.Q) || Input.GetKey(KeyCode.LeftControl)) up -= 1f;
+
+        Vector3 world = Vector3.zero;
+        if (local.sqrMagnitude > 0.001f)
+        {
+            local.Normalize();
+            // Полёт туда, куда смотрит камера (включая вверх/вниз по взгляду)
+            Quaternion look = Quaternion.Euler(pitch, yaw, 0f);
+            world += look * local;
+        }
+
+        world += Vector3.up * up;
+
+        if (world.sqrMagnitude > 0.001f)
+            transform.position += world.normalized * speed * Time.unscaledDeltaTime;
+    }
+
+    void ApplyFlyState()
+    {
+        if (playerMovement != null)
+            playerMovement.enabled = !flyEnabled;
+
+        if (characterController != null)
+            characterController.enabled = !flyEnabled;
+
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
+    }
+
+    void OnGUI()
+    {
+        if (!flyEnabled) return;
+
+        const int pad = 12;
+        GUI.color = new Color(0f, 0f, 0f, 0.55f);
+        GUI.Box(new Rect(pad, pad, 420, 78), GUIContent.none);
+        GUI.color = Color.white;
+        GUI.Label(new Rect(pad + 10, pad + 8, 400, 22), "DEBUG FLY  |  F1 выключить");
+        GUI.Label(new Rect(pad + 10, pad + 30, 400, 40),
+            "WASD лететь  |  Space/E вверх  |  Ctrl/Q вниз\nShift ускорение  |  колесо — скорость  " + currentSpeed.ToString("0"));
     }
 }
