@@ -3700,151 +3700,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &1786054968
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1786054970}
-  - component: {fileID: 1786054969}
-  m_Layer: 0
-  m_Name: GraphBuilder
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &1786054969
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1786054968}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2afafdde2aba1484b8bbacaf31e1a401, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::GraphBuilder
-  nodes:
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
---- !u!4 &1786054970
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1786054968}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -5.99275, y: -0.48999, z: 2.43445}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1833876288
 GameObject:
   m_ObjectHideFlags: 0
@@ -3889,7 +3744,6 @@ GameObject:
   m_Component:
   - component: {fileID: 1890278971}
   - component: {fileID: 1890278970}
-  - component: {fileID: 1890278973}
   m_Layer: 0
   m_Name: LevelGenerator
   m_TagString: Untagged
@@ -3909,16 +3763,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 518481fe1ec0d7f4fbb4017e57af6ae7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LevelGenerator
-  graphBuilder: {fileID: 1786054969}
   hutPrefab: {fileID: 9172780985416024049, guid: 18552779e5c7eaf4c9a8119588b69f7d, type: 3}
   ritualPrefabs:
-  - {fileID: 9172780985416024049, guid: 3d4ed4686f95e6b4db080596e0c0ef7a, type: 3}
   - {fileID: 9172780985416024049, guid: 9c3387b5fb774ec4ea2754bf6e106569, type: 3}
+  - {fileID: 9172780985416024049, guid: 3d4ed4686f95e6b4db080596e0c0ef7a, type: 3}
+  pathSegmentPrefab: {fileID: 927712367110358158, guid: c959cda9732487f4e9fcb085884fcc51, type: 3}
   mapSize: 500
   numberOfRitualPlaces: 4
-  numberOfRandomNodes: 70
-  minDistanceBetweenImportant: 130
-  minDistanceBetweenNodes: 35
+  numberOfRandomNodes: 35
 --- !u!4 &1890278971
 Transform:
   m_ObjectHideFlags: 0
@@ -3934,22 +3786,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1890278973
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1890278969}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ed1cf70bfdf3cb147bd2bc1a7e050f97, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::PathGenerator
-  graphBuilder: {fileID: 1786054969}
-  pathSegmentPrefab: {fileID: 927712367110358158, guid: c959cda9732487f4e9fcb085884fcc51, type: 3}
-  segmentsPerEdge: 15
-  pathDeviation: 1
 --- !u!1 &1899919314
 GameObject:
   m_ObjectHideFlags: 0
@@ -4107,6 +3943,7 @@ GameObject:
   - component: {fileID: 1957087396}
   - component: {fileID: 1957087395}
   - component: {fileID: 1957087398}
+  - component: {fileID: 1957087399}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -4121,15 +3958,15 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1957087394}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: edbbb4a08d4146f4495ed8872cbed7d6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerMovement
-  speed: 20
+  speed: 5
   sprintSpeed: 8
   jumpForce: 1.5
-  gravity: 15
+  gravity: -9.81
   mouseSensitivity: 300
   playerCamera: {fileID: 602599415}
   maxStamina: 100
@@ -4193,6 +4030,21 @@ MonoBehaviour:
   maxOil: 100
   oil: 100
   oilDrain: 5
+--- !u!114 &1957087399
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1957087394}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 06c9850c360266944b87affea808e74f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DeveloperFlyMode
+  moveSpeed: 50
+  fastMoveSpeed: 120
+  lookSpeed: 3
 --- !u!1 &1973788416
 GameObject:
   m_ObjectHideFlags: 0
@@ -4496,4 +4348,3 @@ SceneRoots:
   - {fileID: 1631031133}
   - {fileID: 2113753536}
   - {fileID: 1890278971}
-  - {fileID: 1786054970}
