@@ -7,7 +7,7 @@ Shader "Pizdec/EchoInvisible"
         {
             Tags { "LightMode"="UniversalForward" }
             ColorMask 0
-            ZWrite Off
+            ZWrite On
             HLSLPROGRAM
             #pragma vertex vert
             #pragma fragment frag
