@@ -20,6 +20,7 @@ public class EchoTarget : MonoBehaviour
     private float targetRadius;
     private float outlineFade;
     private bool highlighted;
+    private bool echoVisionActive;
     private Vector3 echoPoint;
 
     private static readonly int OutlineColor = Shader.PropertyToID("_OutlineColor");
@@ -72,6 +73,18 @@ public class EchoTarget : MonoBehaviour
             highlighted = false;
     }
 
+    public void SetEchoVisionActive(bool active)
+    {
+        echoVisionActive = active;
+        if (!active)
+        {
+            highlighted = false;
+            outlineFade = 0f;
+            if (outlineMaterial != null)
+                outlineMaterial.SetFloat(EchoFade, 0f);
+        }
+    }
+
     public float GetReflection() => reflection;
     public float GetAbsorption() => absorption;
 
@@ -82,6 +95,8 @@ public class EchoTarget : MonoBehaviour
 
     public void OnEchoHit(Vector3 contactPoint, Vector3 waveDirection, float waveRadius)
     {
+        if (!echoVisionActive)
+            return;
         echoPoint = contactPoint;
         targetRadius = Mathf.Max(targetRadius, waveRadius);
         revealRadius = Mathf.Min(revealRadius, targetRadius);
