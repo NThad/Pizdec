@@ -15,7 +15,7 @@ public class EchoWave : MonoBehaviour
     private const float DetourAngleStep = 2f;
     private const float MaxDetourAngle = 120f;
 
-    private readonly HashSet<EchoTarget> detectedTargets = new HashSet<EchoTarget>();
+    private readonly Dictionary<EchoTarget, float> detectedTargets = new Dictionary<EchoTarget, float>();
 
     public void Initialize(float radius, float waveDuration)
     {
@@ -50,18 +50,21 @@ public class EchoWave : MonoBehaviour
             return;
 
         Vector3 origin = transform.position;
+        detectedTargets.Clear();
 
         for (int i = 0; i < Points; i++)
         {
             float angle = i * Mathf.PI * 2f / Points;
             float resolvedAngle = FindFreeAngle(origin, angle, currentRadius);
-
             Vector3 direction = new Vector3(Mathf.Cos(resolvedAngle), 0f, Mathf.Sin(resolvedAngle));
             Vector3 surfacePoint = GetSurfacePoint(origin, direction * currentRadius);
 
             line.SetPosition(i, surfacePoint + Vector3.up * SurfaceOffset);
             CheckForTargets(surfacePoint);
         }
+
+        foreach (KeyValuePair<EchoTarget, float> hit in detectedTargets)
+            hit.Key.OnEchoHit(hit.Key.transform.position, Vector3.zero, hit.Value);
     }
 
     private float FindFreeAngle(Vector3 origin, float desiredAngle, float radius)
@@ -92,11 +95,7 @@ public class EchoWave : MonoBehaviour
 
     private Vector3 GetHorizontalPoint(Vector3 origin, float angle, float radius)
     {
-        return origin + new Vector3(
-            Mathf.Cos(angle) * radius,
-            0f,
-            Mathf.Sin(angle) * radius
-        );
+        return origin + new Vector3(Mathf.Cos(angle) * radius, 0f, Mathf.Sin(angle) * radius);
     }
 
     private bool IsPathClear(Vector3 origin, Vector3 destination)
@@ -114,7 +113,6 @@ public class EchoWave : MonoBehaviour
         foreach (RaycastHit hit in hits)
         {
             EchoObstacle obstacle = hit.collider.GetComponentInParent<EchoObstacle>();
-
             if (obstacle != null && obstacle.blocksEcho)
                 return false;
         }
@@ -124,17 +122,9 @@ public class EchoWave : MonoBehaviour
 
     private Vector3 GetSurfacePoint(Vector3 origin, Vector3 offset)
     {
-        Vector3 rayStart = new Vector3(
-            origin.x + offset.x,
-            origin.y + RaycastHeight,
-            origin.z + offset.z
-        );
+        Vector3 rayStart = new Vector3(origin.x + offset.x, origin.y + RaycastHeight, origin.z + offset.z);
 
-        RaycastHit[] hits = Physics.RaycastAll(
-            rayStart,
-            Vector3.down,
-            RaycastHeight * 2f
-        );
+        RaycastHit[] hits = Physics.RaycastAll(rayStart, Vector3.down, RaycastHeight * 2f);
 
         float closestSurfaceY = float.NegativeInfinity;
         bool foundSurface = false;
@@ -142,7 +132,6 @@ public class EchoWave : MonoBehaviour
         foreach (RaycastHit hit in hits)
         {
             EchoObstacle obstacle = hit.collider.GetComponentInParent<EchoObstacle>();
-
             if (obstacle == null || !obstacle.affectsEcho)
                 continue;
 
@@ -154,19 +143,9 @@ public class EchoWave : MonoBehaviour
         }
 
         if (foundSurface)
-        {
-            return new Vector3(
-                origin.x + offset.x,
-                closestSurfaceY,
-                origin.z + offset.z
-            );
-        }
+            return new Vector3(origin.x + offset.x, closestSurfaceY, origin.z + offset.z);
 
-        return new Vector3(
-            origin.x + offset.x,
-            origin.y,
-            origin.z + offset.z
-        );
+        return new Vector3(origin.x + offset.x, origin.y, origin.z + offset.z);
     }
 
     private void CheckForTargets(Vector3 surfacePoint)
@@ -176,12 +155,11 @@ public class EchoWave : MonoBehaviour
         foreach (Collider collider in colliders)
         {
             EchoTarget target = collider.GetComponentInParent<EchoTarget>();
-
-            if (target == null || detectedTargets.Contains(target))
+            if (target == null)
                 continue;
 
-            detectedTargets.Add(target);
-            target.OnEchoHit(surfacePoint, surfacePoint - transform.position, currentRadius);
+            if (!detectedTargets.TryGetValue(target, out float previousRadius) || currentRadius > previousRadius)
+                detectedTargets[target] = currentRadius;
         }
     }
 }
