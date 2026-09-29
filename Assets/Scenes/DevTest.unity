@@ -962,6 +962,7 @@ GameObject:
   - component: {fileID: 275823126}
   - component: {fileID: 275823125}
   - component: {fileID: 275823124}
+  - component: {fileID: 275823128}
   m_Layer: 0
   m_Name: Capsule
   m_TagString: Untagged
@@ -1064,6 +1065,23 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &275823128
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 275823123}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 33a1242accc567d4794d314ed239afa0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SoundSource
+  soundType: 2
+  soundPower: 1
+  smallRadius: 5
+  largeRadius: 15
+  audioSource: {fileID: 0}
 --- !u!1 &313238212
 GameObject:
   m_ObjectHideFlags: 0
@@ -1859,6 +1877,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 830977963}
+  - component: {fileID: 830977964}
   m_Layer: 0
   m_Name: foresst
   m_TagString: Untagged
@@ -1885,6 +1904,21 @@ Transform:
   - {fileID: 6212414}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &830977964
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 830977962}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fc31fb30c0c506d49a04184cbdceccea, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EchoTarget
+  absorption: 0.5
+  reflection: 0.5
+  blocksSound: 1
 --- !u!1 &861170032
 GameObject:
   m_ObjectHideFlags: 0
