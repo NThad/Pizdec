@@ -140,12 +140,13 @@ public class EchoTarget : MonoBehaviour
         {
             echoPoint = contactPoint;
             revealRadius = waveRadius;
-            fadeStartRadius = GetMaxDistanceFromPoint(echoPoint);
+            targetRadius = GetMaxDistanceFromPoint(echoPoint);
+            fadeStartRadius = targetRadius;
             outlineFade = 1f;
             highlighted = true;
         }
 
-        targetRadius = Mathf.Max(targetRadius, waveRadius);
+        revealRadius = Mathf.Max(revealRadius, waveRadius);
         ApplyOutline();
     }
 
