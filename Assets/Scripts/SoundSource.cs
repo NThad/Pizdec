@@ -14,7 +14,7 @@ public enum SoundMode
     Echo
 }
 
-public class SoundSource : MonoBehaviour
+public class SoundSource : Interactable
 {
     [Header("Sound")]
     public SoundType soundType = SoundType.Other;
@@ -59,6 +59,11 @@ public class SoundSource : MonoBehaviour
 
         float t = Mathf.InverseLerp(largeRadius, smallRadius, distance);
         return soundPower * t;
+    }
+
+    public override void Interact()
+    {
+        EmitEcho();
     }
 
     public void EmitEcho()
