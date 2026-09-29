@@ -9,6 +9,7 @@ Shader "Pizdec/EchoOutline"
         _EchoBand ("Echo Reveal Band", Float) = 1.25
         _EchoFadeRadius ("Echo Fade Radius", Float) = 0
         _EchoFadeBand ("Echo Fade Band", Float) = 1.0
+        _EchoOpacity ("Echo Opacity", Range(0,1)) = 1
     }
 
     SubShader
@@ -60,6 +61,7 @@ Shader "Pizdec/EchoOutline"
                 float _EchoBand;
                 float _EchoFadeRadius;
                 float _EchoFadeBand;
+                float _EchoOpacity;
             CBUFFER_END
 
             Varyings vert(Attributes input)
@@ -112,7 +114,7 @@ Shader "Pizdec/EchoOutline"
                     );
                 }
 
-                float alpha = reveal * fade * _OutlineColor.a;
+                float alpha = reveal * fade * _OutlineColor.a * _EchoOpacity;
 
                 if (alpha <= 0.001)
                     discard;
