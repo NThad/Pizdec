@@ -11,7 +11,6 @@ public class EchoTarget : MonoBehaviour
     [Header("Echo Outline")]
     public Color outlineColor = Color.white;
     [Min(0.001f)] public float outlineWidth = 0.025f;
-    [Min(0.01f)] public float revealSpeed = 8f;
     [Min(0f)] public float glowHoldTime = 1.5f;
     [Min(0f)] public float fadeSpeed = 2f;
     [Min(0.01f)] public float revealBand = 1.25f;
@@ -175,10 +174,15 @@ public class EchoTarget : MonoBehaviour
             highlighted = true;
         }
 
-        // Keep the shader reveal locked to the actual wave front.
-        revealRadius = Mathf.Max(revealRadius, waveRadius);
+        // Once the contour is fully revealed, subsequent echoes must not
+        // restart or otherwise interfere with the hold/fade state.
+        if (revealComplete)
+            return;
 
-        if (!revealComplete && revealRadius >= targetRadius)
+        // Keep the shader reveal locked to the actual wave front.
+        revealRadius = Mathf.Min(targetRadius, Mathf.Max(revealRadius, waveRadius));
+
+        if (revealRadius >= targetRadius)
         {
             revealRadius = targetRadius;
             revealComplete = true;
