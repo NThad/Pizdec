@@ -7,7 +7,8 @@ Shader "Pizdec/EchoOutline"
         _EchoPoint ("Echo Point", Vector) = (0,0,0,0)
         _EchoRadius ("Echo Radius", Float) = 0
         _EchoBand ("Echo Reveal Band", Float) = 1.25
-        _EchoFade ("Echo Fade", Float) = 1
+        _EchoFadeRadius ("Echo Fade Radius", Float) = 0
+        _EchoFadeBand ("Echo Fade Band", Float) = 1.0
     }
 
     SubShader
@@ -54,7 +55,8 @@ Shader "Pizdec/EchoOutline"
                 float4 _EchoPoint;
                 float _EchoRadius;
                 float _EchoBand;
-                float _EchoFade;
+                float _EchoFadeRadius;
+                float _EchoFadeBand;
             CBUFFER_END
 
             Varyings vert(Attributes input)
@@ -73,17 +75,36 @@ Shader "Pizdec/EchoOutline"
             half4 frag(Varyings input) : SV_Target
             {
                 float distanceFromEcho = distance(input.positionWS, _EchoPoint.xyz);
-                float band = max(_EchoBand, 0.01);
+                float revealBand = max(_EchoBand, 0.01);
 
-                // Reveal the already-reached part of the object.
-                float reveal = 1.0 - smoothstep(_EchoRadius - band, _EchoRadius, distanceFromEcho);
+                // Cumulative reveal: once the wave has passed, the contour stays lit.
+                float reveal = 1.0 - smoothstep(
+                    _EchoRadius - revealBand,
+                    _EchoRadius,
+                    distanceFromEcho
+                );
 
-                // Keep only the silhouette/edge of the expanded hull.
+                // Inverted hull + Fresnel: visible pixels are limited to the silhouette.
                 float3 viewDir = normalize(_WorldSpaceCameraPos - input.positionWS);
                 float edge = 1.0 - abs(dot(normalize(input.normalWS), viewDir));
                 edge = smoothstep(0.72, 0.94, edge);
 
-                float alpha = reveal * edge * _EchoFade * _OutlineColor.a;
+                // Fade starts only after the complete contour has been revealed.
+                // The fade front starts at the original echo contact point.
+                float fade = 1.0;
+
+                if (_EchoFadeRadius > 0.0)
+                {
+                    float fadeBand = max(_EchoFadeBand, 0.01);
+                    fade = 1.0 - smoothstep(
+                        _EchoFadeRadius - fadeBand,
+                        _EchoFadeRadius,
+                        distanceFromEcho
+                    );
+                }
+
+                float alpha = edge * reveal * fade * _OutlineColor.a;
+
                 if (alpha <= 0.001)
                     discard;
 
