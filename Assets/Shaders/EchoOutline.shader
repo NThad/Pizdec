@@ -73,9 +73,9 @@ Shader "Pizdec/EchoOutline"
                 float distanceFromEcho = distance(input.positionWS, _EchoPoint.xyz);
                 float band = max(_EchoBand, 0.01);
 
-                // The outline exists only in the advancing shell of the echo.
-                float reveal = smoothstep(_EchoRadius - band, _EchoRadius, distanceFromEcho);
-                reveal *= 1.0 - smoothstep(_EchoRadius, _EchoRadius + band, distanceFromEcho);
+                // Everything behind the wave front stays illuminated.
+                // Only the outer hull is rendered, so this reads as a true 3D contour.
+                float reveal = 1.0 - smoothstep(_EchoRadius - band, _EchoRadius, distanceFromEcho);
 
                 float alpha = reveal * _EchoFade * _OutlineColor.a;
                 if (alpha <= 0.001)
