@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using UnityEngine;
 
 public class EchoTarget : MonoBehaviour
@@ -12,32 +11,24 @@ public class EchoTarget : MonoBehaviour
 
     public bool blocksSound = true;
 
-    [Header("Echo Highlight")]
-    public Color highlightColor = Color.white;
+    [Header("Echo Outline")]
+    public Color outlineColor = Color.white;
     [Min(0f)] public float outlineWidth = 0.025f;
-    [Min(0f)] public float highlightDuration = 1.25f;
-    [Min(0f)] public float fadeDuration = 0.75f;
+    [Min(0f)] public float revealSpeed = 6f;
+    [Min(0f)] public float fadeSpeed = 2f;
 
     private Renderer[] renderers;
-    private readonly List<Material> outlineMaterials = new();
-    private readonly List<Material> originalMaterials = new();
-    private float highlightTime;
+    private MaterialPropertyBlock propertyBlock;
+    private float highlight;
     private bool highlighted;
+
+    private static readonly int BaseColor = Shader.PropertyToID("_BaseColor");
+    private static readonly int Color = Shader.PropertyToID("_Color");
 
     private void Awake()
     {
         renderers = GetComponentsInChildren<Renderer>();
-
-        foreach (Renderer renderer in renderers)
-        {
-            foreach (Material material in renderer.sharedMaterials)
-            {
-                if (material == null)
-                    continue;
-
-                originalMaterials.Add(material);
-            }
-        }
+        propertyBlock = new MaterialPropertyBlock();
     }
 
     private void Update()
@@ -45,13 +36,11 @@ public class EchoTarget : MonoBehaviour
         if (!highlighted)
             return;
 
-        highlightTime -= Time.deltaTime;
+        highlight = Mathf.MoveTowards(highlight, 0f, fadeSpeed * Time.deltaTime);
+        ApplyHighlight(highlight);
 
-        if (highlightTime <= 0f)
-        {
+        if (highlight <= 0f)
             highlighted = false;
-            return;
-        }
     }
 
     public float GetReflection()
@@ -67,15 +56,28 @@ public class EchoTarget : MonoBehaviour
     public void OnEchoDetected()
     {
         highlighted = true;
-        highlightTime = highlightDuration + fadeDuration;
-
+        highlight = 1f;
+        ApplyHighlight(highlight);
         Debug.Log($"ECHO detected: {gameObject.name}");
     }
 
-    // Reserved for the progressive wave-driven outline implementation.
-    // The contact point will be supplied by EchoWave in the next step.
     public void OnEchoHit(Vector3 contactPoint, Vector3 waveDirection)
     {
+        // Contact data is kept in the API so EchoWave can drive a spatial
+        // outline later without changing the detection contract again.
         OnEchoDetected();
+    }
+
+    private void ApplyHighlight(float intensity)
+    {
+        Color color = outlineColor * intensity;
+
+        foreach (Renderer renderer in renderers)
+        {
+            renderer.GetPropertyBlock(propertyBlock);
+            propertyBlock.SetColor(BaseColor, color);
+            propertyBlock.SetColor(Color, color);
+            renderer.SetPropertyBlock(propertyBlock);
+        }
     }
 }
