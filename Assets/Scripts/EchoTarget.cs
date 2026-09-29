@@ -21,8 +21,8 @@ public class EchoTarget : MonoBehaviour
     private readonly Dictionary<Renderer, Material[]> originalMaterials = new Dictionary<Renderer, Material[]>();
     private float revealRadius;
     private float targetRadius;
-    private float outlineFade;
-    private float fadeStartRadius;
+    private float fadeRadius;
+    private bool revealComplete;
     private bool highlighted;
     private bool echoVisionActive;
     private Vector3 echoPoint;
@@ -32,7 +32,8 @@ public class EchoTarget : MonoBehaviour
     private static readonly int EchoPoint = Shader.PropertyToID("_EchoPoint");
     private static readonly int EchoRadius = Shader.PropertyToID("_EchoRadius");
     private static readonly int EchoBand = Shader.PropertyToID("_EchoBand");
-    private static readonly int EchoFade = Shader.PropertyToID("_EchoFade");
+    private static readonly int EchoFadeRadius = Shader.PropertyToID("_EchoFadeRadius");
+    private static readonly int EchoFadeBand = Shader.PropertyToID("_EchoFadeBand");
 
     private void Awake()
     {
@@ -74,15 +75,26 @@ public class EchoTarget : MonoBehaviour
         if (!highlighted || outlineMaterial == null)
             return;
 
-        revealRadius = Mathf.MoveTowards(revealRadius, targetRadius, revealSpeed * Time.deltaTime);
+        if (!revealComplete)
+        {
+            revealRadius = Mathf.MoveTowards(revealRadius, targetRadius, revealSpeed * Time.deltaTime);
 
-        if (revealRadius >= fadeStartRadius)
-            outlineFade = Mathf.MoveTowards(outlineFade, 0f, fadeSpeed * Time.deltaTime);
+            if (revealRadius >= targetRadius)
+            {
+                revealRadius = targetRadius;
+                revealComplete = true;
+                fadeRadius = 0f;
+            }
+        }
+        else
+        {
+            fadeRadius = Mathf.MoveTowards(fadeRadius, targetRadius, fadeSpeed * Time.deltaTime);
+
+            if (fadeRadius >= targetRadius)
+                highlighted = false;
+        }
 
         ApplyOutline();
-
-        if (outlineFade <= 0f)
-            highlighted = false;
     }
 
     public void SetEchoVisionActive(bool active)
@@ -114,15 +126,20 @@ public class EchoTarget : MonoBehaviour
                 renderer.sharedMaterials = restored;
             }
         }
+
         if (!active)
         {
             highlighted = false;
-            outlineFade = 0f;
+            revealComplete = false;
             revealRadius = 0f;
             targetRadius = 0f;
-            fadeStartRadius = 0f;
+            fadeRadius = 0f;
+
             if (outlineMaterial != null)
-                outlineMaterial.SetFloat(EchoFade, 0f);
+            {
+                outlineMaterial.SetFloat(EchoFadeRadius, 0f);
+                outlineMaterial.SetFloat(EchoFadeBand, revealBand);
+            }
         }
     }
 
@@ -141,8 +158,8 @@ public class EchoTarget : MonoBehaviour
             echoPoint = contactPoint;
             revealRadius = waveRadius;
             targetRadius = GetMaxDistanceFromPoint(echoPoint);
-            fadeStartRadius = targetRadius;
-            outlineFade = 1f;
+            fadeRadius = 0f;
+            revealComplete = false;
             highlighted = true;
         }
 
@@ -153,6 +170,7 @@ public class EchoTarget : MonoBehaviour
     private float GetMaxDistanceFromPoint(Vector3 point)
     {
         Bounds bounds = new Bounds(transform.position, Vector3.zero);
+
         foreach (Renderer renderer in renderers)
         {
             if (renderer != null)
@@ -191,13 +209,15 @@ public class EchoTarget : MonoBehaviour
         outlineMaterial.SetVector(EchoPoint, echoPoint);
         outlineMaterial.SetFloat(EchoRadius, revealRadius);
         outlineMaterial.SetFloat(EchoBand, revealBand);
-        outlineMaterial.SetFloat(EchoFade, outlineFade);
+        outlineMaterial.SetFloat(EchoFadeRadius, fadeRadius);
+        outlineMaterial.SetFloat(EchoFadeBand, revealBand);
     }
 
     private void OnDestroy()
     {
         if (outlineMaterial != null)
             Destroy(outlineMaterial);
+
         if (invisibleMaterial != null)
             Destroy(invisibleMaterial);
     }
