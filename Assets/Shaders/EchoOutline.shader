@@ -45,6 +45,7 @@ Shader "Pizdec/EchoOutline"
             {
                 float4 positionHCS : SV_POSITION;
                 float3 positionWS : TEXCOORD0;
+                float3 normalWS : TEXCOORD1;
             };
 
             CBUFFER_START(UnityPerMaterial)
@@ -64,6 +65,7 @@ Shader "Pizdec/EchoOutline"
 
                 float3 positionWS = pos.positionWS + normal.normalWS * _OutlineWidth;
                 output.positionWS = positionWS;
+                output.normalWS = normal.normalWS;
                 output.positionHCS = TransformWorldToHClip(positionWS);
                 return output;
             }
@@ -73,11 +75,15 @@ Shader "Pizdec/EchoOutline"
                 float distanceFromEcho = distance(input.positionWS, _EchoPoint.xyz);
                 float band = max(_EchoBand, 0.01);
 
-                // Everything behind the wave front stays illuminated.
-                // Only the outer hull is rendered, so this reads as a true 3D contour.
+                // Reveal the already-reached part of the object.
                 float reveal = 1.0 - smoothstep(_EchoRadius - band, _EchoRadius, distanceFromEcho);
 
-                float alpha = reveal * _EchoFade * _OutlineColor.a;
+                // Keep only the silhouette/edge of the expanded hull.
+                float3 viewDir = normalize(_WorldSpaceCameraPos - input.positionWS);
+                float edge = 1.0 - abs(dot(normalize(input.normalWS), viewDir));
+                edge = smoothstep(0.72, 0.94, edge);
+
+                float alpha = reveal * edge * _EchoFade * _OutlineColor.a;
                 if (alpha <= 0.001)
                     discard;
 
