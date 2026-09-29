@@ -12,6 +12,8 @@ public class EchoWave : MonoBehaviour
     private const float RaycastHeight = 100f;
     private const float SurfaceOffset = 0.08f;
     private const float TargetCheckRadius = 0.75f;
+    private const float DetourAngleStep = 2f;
+    private const float MaxDetourAngle = 120f;
 
     private readonly HashSet<EchoTarget> detectedTargets = new HashSet<EchoTarget>();
 
@@ -52,12 +54,72 @@ public class EchoWave : MonoBehaviour
         for (int i = 0; i < Points; i++)
         {
             float angle = i * Mathf.PI * 2f / Points;
-            Vector3 direction = new Vector3(Mathf.Cos(angle), 0f, Mathf.Sin(angle));
+            float resolvedAngle = FindFreeAngle(origin, angle, currentRadius);
+
+            Vector3 direction = new Vector3(Mathf.Cos(resolvedAngle), 0f, Mathf.Sin(resolvedAngle));
             Vector3 surfacePoint = GetSurfacePoint(origin, direction * currentRadius);
 
             line.SetPosition(i, surfacePoint + Vector3.up * SurfaceOffset);
             CheckForTargets(surfacePoint);
         }
+    }
+
+    private float FindFreeAngle(Vector3 origin, float desiredAngle, float radius)
+    {
+        if (radius <= 0.01f)
+            return desiredAngle;
+
+        if (IsPathClear(origin, GetHorizontalPoint(origin, desiredAngle, radius)))
+            return desiredAngle;
+
+        int steps = Mathf.CeilToInt(MaxDetourAngle / DetourAngleStep);
+
+        for (int step = 1; step <= steps; step++)
+        {
+            float offset = step * DetourAngleStep * Mathf.Deg2Rad;
+
+            float left = desiredAngle - offset;
+            if (IsPathClear(origin, GetHorizontalPoint(origin, left, radius)))
+                return left;
+
+            float right = desiredAngle + offset;
+            if (IsPathClear(origin, GetHorizontalPoint(origin, right, radius)))
+                return right;
+        }
+
+        return desiredAngle;
+    }
+
+    private Vector3 GetHorizontalPoint(Vector3 origin, float angle, float radius)
+    {
+        return origin + new Vector3(
+            Mathf.Cos(angle) * radius,
+            0f,
+            Mathf.Sin(angle) * radius
+        );
+    }
+
+    private bool IsPathClear(Vector3 origin, Vector3 destination)
+    {
+        Vector3 start = origin + Vector3.up * 0.25f;
+        Vector3 end = destination + Vector3.up * 0.25f;
+        Vector3 direction = end - start;
+        float distance = direction.magnitude;
+
+        if (distance <= 0.01f)
+            return true;
+
+        RaycastHit[] hits = Physics.RaycastAll(start, direction.normalized, distance);
+
+        foreach (RaycastHit hit in hits)
+        {
+            EchoObstacle obstacle = hit.collider.GetComponentInParent<EchoObstacle>();
+
+            if (obstacle != null && obstacle.blocksEcho)
+                return false;
+        }
+
+        return true;
     }
 
     private Vector3 GetSurfacePoint(Vector3 origin, Vector3 offset)
