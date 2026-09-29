@@ -253,6 +253,7 @@ public class EchoTarget : MonoBehaviour
         outlineMaterial.SetFloat(EchoBand, revealBand);
         outlineMaterial.SetFloat(EchoFadeRadius, fadeRadius);
         outlineMaterial.SetFloat(EchoFadeBand, revealBand);
+        outlineMaterial.SetFloat(EchoOpacity, fadeOpacity);
     }
 
     private void OnDestroy()
