@@ -31,6 +31,10 @@ public class SoundSource : Interactable
     [Min(0f)]
     public float largeRadius = 15f;
 
+    [Header("Echo")]
+    [Min(0.1f)]
+    public float echoDuration = 1f;
+
     [Header("Optional")]
     public AudioSource audioSource;
 
@@ -72,5 +76,11 @@ public class SoundSource : Interactable
             return;
 
         Debug.Log($"ECHO emitted from {gameObject.name}. Radius: {largeRadius}, Power: {soundPower}");
+
+        GameObject waveObject = new GameObject("EchoWave");
+        waveObject.transform.position = transform.position;
+
+        EchoWave wave = waveObject.AddComponent<EchoWave>();
+        wave.Initialize(largeRadius, echoDuration);
     }
 }
