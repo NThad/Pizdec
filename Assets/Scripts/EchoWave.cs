@@ -15,7 +15,7 @@ public class EchoWave : MonoBehaviour
     private const float DetourAngleStep = 2f;
     private const float MaxDetourAngle = 120f;
 
-    private readonly Dictionary<EchoTarget, float> detectedTargets = new Dictionary<EchoTarget, float>();
+    private readonly Dictionary<EchoTarget, Vector3> detectedTargets = new Dictionary<EchoTarget, Vector3>();
 
     public void Initialize(float radius, float waveDuration)
     {
@@ -63,8 +63,8 @@ public class EchoWave : MonoBehaviour
             CheckForTargets(surfacePoint);
         }
 
-        foreach (KeyValuePair<EchoTarget, float> hit in detectedTargets)
-            hit.Key.OnEchoHit(hit.Key.transform.position, Vector3.zero, hit.Value);
+        foreach (KeyValuePair<EchoTarget, Vector3> hit in detectedTargets)
+            hit.Key.OnEchoHit(hit.Value, Vector3.zero, currentRadius);
     }
 
     private float FindFreeAngle(Vector3 origin, float desiredAngle, float radius)
@@ -158,8 +158,7 @@ public class EchoWave : MonoBehaviour
             if (target == null)
                 continue;
 
-            if (!detectedTargets.TryGetValue(target, out float previousRadius) || currentRadius > previousRadius)
-                detectedTargets[target] = currentRadius;
+            detectedTargets[target] = surfacePoint;
         }
     }
 }
