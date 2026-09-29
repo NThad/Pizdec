@@ -68,8 +68,37 @@ public class EchoWave : MonoBehaviour
             origin.z + offset.z
         );
 
-        if (Physics.Raycast(rayStart, Vector3.down, out RaycastHit hit, RaycastHeight * 2f))
-            return hit.point;
+        RaycastHit[] hits = Physics.RaycastAll(
+            rayStart,
+            Vector3.down,
+            RaycastHeight * 2f
+        );
+
+        float closestSurfaceY = float.NegativeInfinity;
+        bool foundSurface = false;
+
+        foreach (RaycastHit hit in hits)
+        {
+            EchoObstacle obstacle = hit.collider.GetComponentInParent<EchoObstacle>();
+
+            if (obstacle == null || !obstacle.affectsEcho)
+                continue;
+
+            if (!foundSurface || hit.point.y > closestSurfaceY)
+            {
+                closestSurfaceY = hit.point.y;
+                foundSurface = true;
+            }
+        }
+
+        if (foundSurface)
+        {
+            return new Vector3(
+                origin.x + offset.x,
+                closestSurfaceY,
+                origin.z + offset.z
+            );
+        }
 
         return new Vector3(
             origin.x + offset.x,
