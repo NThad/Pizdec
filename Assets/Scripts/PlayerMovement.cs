@@ -25,6 +25,13 @@ public class PlayerMovement : MonoBehaviour
     {
         controller = GetComponent<CharacterController>();
         Cursor.lockState = CursorLockMode.Locked;
+
+        // Gravity must point downward. This also protects against an accidental
+        // positive value saved in a scene's Inspector.
+        if (gravity > 0f)
+        {
+            gravity = -9.81f;
+        }
     }
 
     void Update()
@@ -48,12 +55,11 @@ public class PlayerMovement : MonoBehaviour
             && stamina > 0
             && z > 0;
 
-        
         if (isRunning)
-        {   
+        {
             stamina -= staminaDrain * Time.deltaTime;
-            if(stamina<=1f)
-            {   
+            if (stamina <= 1f)
+            {
                 isRunning = false;
             }
         }
@@ -61,6 +67,7 @@ public class PlayerMovement : MonoBehaviour
         {
             stamina += staminaRegen * Time.deltaTime;
         }
+
         float currentSpeed =
             isRunning
             ? sprintSpeed
@@ -72,8 +79,6 @@ public class PlayerMovement : MonoBehaviour
             maxStamina
         );
 
-        
-        
         Vector3 move = transform.right * x + transform.forward * z;
 
         // --- ГРАВИТАЦИЯ ---
@@ -101,7 +106,7 @@ public class PlayerMovement : MonoBehaviour
             RaycastHit hit;
 
             if (Physics.Raycast(ray, out hit, 3f))
-            {   
+            {
                 Debug.Log("Попал в: " + hit.collider.name);
                 Interactable interactable =
                     hit.collider.GetComponentInParent<Interactable>();
@@ -112,8 +117,5 @@ public class PlayerMovement : MonoBehaviour
                 }
             }
         }
-
-
-
     }
 }
