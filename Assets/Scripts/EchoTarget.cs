@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public class EchoTarget : MonoBehaviour
@@ -13,15 +14,44 @@ public class EchoTarget : MonoBehaviour
 
     [Header("Echo Highlight")]
     public Color highlightColor = Color.white;
+    [Min(0f)] public float outlineWidth = 0.025f;
+    [Min(0f)] public float highlightDuration = 1.25f;
+    [Min(0f)] public float fadeDuration = 0.75f;
 
     private Renderer[] renderers;
-    private MaterialPropertyBlock propertyBlock;
+    private readonly List<Material> outlineMaterials = new();
+    private readonly List<Material> originalMaterials = new();
+    private float highlightTime;
     private bool highlighted;
 
     private void Awake()
     {
         renderers = GetComponentsInChildren<Renderer>();
-        propertyBlock = new MaterialPropertyBlock();
+
+        foreach (Renderer renderer in renderers)
+        {
+            foreach (Material material in renderer.sharedMaterials)
+            {
+                if (material == null)
+                    continue;
+
+                originalMaterials.Add(material);
+            }
+        }
+    }
+
+    private void Update()
+    {
+        if (!highlighted)
+            return;
+
+        highlightTime -= Time.deltaTime;
+
+        if (highlightTime <= 0f)
+        {
+            highlighted = false;
+            return;
+        }
     }
 
     public float GetReflection()
@@ -36,19 +66,16 @@ public class EchoTarget : MonoBehaviour
 
     public void OnEchoDetected()
     {
-        if (highlighted)
-            return;
-
         highlighted = true;
-
-        foreach (Renderer renderer in renderers)
-        {
-            renderer.GetPropertyBlock(propertyBlock);
-            propertyBlock.SetColor("_Color", highlightColor);
-            propertyBlock.SetColor("_BaseColor", highlightColor);
-            renderer.SetPropertyBlock(propertyBlock);
-        }
+        highlightTime = highlightDuration + fadeDuration;
 
         Debug.Log($"ECHO detected: {gameObject.name}");
+    }
+
+    // Reserved for the progressive wave-driven outline implementation.
+    // The contact point will be supplied by EchoWave in the next step.
+    public void OnEchoHit(Vector3 contactPoint, Vector3 waveDirection)
+    {
+        OnEchoDetected();
     }
 }
