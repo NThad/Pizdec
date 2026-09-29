@@ -14,6 +14,7 @@ public class EchoTarget : MonoBehaviour
     [Min(0f)] public float glowHoldTime = 1.5f;
     [Min(0f)] public float fadeSpeed = 2f;
     [Min(0.01f)] public float revealBand = 1.25f;
+    [Min(0.1f)] public float revealSpeed = 15f;
 
     private Renderer[] renderers;
     private Material outlineMaterial;
@@ -89,47 +90,53 @@ public class EchoTarget : MonoBehaviour
 
         if (!revealComplete)
         {
+            // The wave can advance the reveal when it is still reaching the target.
+            // If the wave stops reporting hits, the target continues by itself.
+            revealRadius = Mathf.MoveTowards(
+                revealRadius,
+                targetRadius,
+                revealSpeed * Time.deltaTime
+            );
+
             if (revealRadius >= targetRadius)
             {
                 revealRadius = targetRadius;
                 revealComplete = true;
                 glowTimer = glowHoldTime;
                 fadeRadius = 0f;
+                fadeOpacity = 1f;
             }
-        }
-        else
-        {
-            if (glowTimer > 0f)
-            {
-                glowTimer = Mathf.Max(0f, glowTimer - Time.deltaTime);
-                ApplyOutline();
-                return;
-            }
-
-            fadeRadius = Mathf.MoveTowards(fadeRadius, targetRadius, fadeSpeed * Time.deltaTime);
-            fadeOpacity = 1f - Mathf.Clamp01(fadeRadius / Mathf.Max(targetRadius, 0.001f));
 
             ApplyOutline();
-
-            if (fadeRadius >= targetRadius)
-            {
-                highlighted = false;
-                revealComplete = false;
-                revealRadius = 0f;
-                targetRadius = 0f;
-                fadeRadius = 0f;
-                fadeOpacity = 0f;
-                glowTimer = 0f;
-
-                outlineMaterial.SetFloat(EchoOpacity, 0f);
-                outlineMaterial.SetFloat(EchoRadius, 0f);
-                outlineMaterial.SetFloat(EchoFadeRadius, 0f);
-            }
-
             return;
         }
 
+        if (glowTimer > 0f)
+        {
+            glowTimer = Mathf.Max(0f, glowTimer - Time.deltaTime);
+            ApplyOutline();
+            return;
+        }
+
+        fadeRadius = Mathf.MoveTowards(fadeRadius, targetRadius, fadeSpeed * Time.deltaTime);
+        fadeOpacity = 1f - Mathf.Clamp01(fadeRadius / Mathf.Max(targetRadius, 0.001f));
+
         ApplyOutline();
+
+        if (fadeRadius >= targetRadius)
+        {
+            highlighted = false;
+            revealComplete = false;
+            revealRadius = 0f;
+            targetRadius = 0f;
+            fadeRadius = 0f;
+            fadeOpacity = 0f;
+            glowTimer = 0f;
+
+            outlineMaterial.SetFloat(EchoOpacity, 0f);
+            outlineMaterial.SetFloat(EchoRadius, 0f);
+            outlineMaterial.SetFloat(EchoFadeRadius, 0f);
+        }
     }
 
     public void SetEchoVisionActive(bool active)
@@ -196,8 +203,16 @@ public class EchoTarget : MonoBehaviour
         if (!highlighted)
         {
             echoPoint = contactPoint;
-            revealRadius = waveRadius;
+
+            // A real wave hit starts at its current radius. A zero-radius
+            // detection starts from the contact point and then self-progresses.
+            revealRadius = Mathf.Max(0f, waveRadius);
+
+            // Keep the target radius tied to the actual object bounds, but make
+            // sure there is always visible reveal progress after the first hit.
             targetRadius = GetMaxDistanceFromPoint(echoPoint);
+            targetRadius = Mathf.Max(targetRadius, revealRadius + revealBand);
+
             fadeRadius = 0f;
             glowTimer = 0f;
             revealComplete = false;
@@ -208,7 +223,11 @@ public class EchoTarget : MonoBehaviour
         if (revealComplete)
             return;
 
-        revealRadius = Mathf.Min(targetRadius, Mathf.Max(revealRadius, waveRadius));
+        // If the wave is still active, its radius can pull the reveal forward.
+        revealRadius = Mathf.Min(
+            targetRadius,
+            Mathf.Max(revealRadius, waveRadius)
+        );
 
         if (revealRadius >= targetRadius)
         {
