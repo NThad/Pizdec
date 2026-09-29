@@ -6,7 +6,7 @@ Shader "Pizdec/EchoOutline"
         _OutlineWidth ("Outline Width", Float) = 0.025
         _EchoPoint ("Echo Point", Vector) = (0,0,0,0)
         _EchoRadius ("Echo Radius", Float) = 0
-        _EchoBand ("Echo Band", Float) = 0.8
+        _EchoBand ("Echo Reveal Band", Float) = 1.25
         _EchoFade ("Echo Fade", Float) = 1
     }
 
@@ -33,12 +33,11 @@ Shader "Pizdec/EchoOutline"
             HLSLPROGRAM
             #pragma vertex vert
             #pragma fragment frag
-
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 
             struct Attributes
             {
-                float4 positionOS : POSITION;
+                float3 positionOS : POSITION;
                 float3 normalOS : NORMAL;
             };
 
@@ -46,7 +45,6 @@ Shader "Pizdec/EchoOutline"
             {
                 float4 positionHCS : SV_POSITION;
                 float3 positionWS : TEXCOORD0;
-                float3 normalWS : TEXCOORD1;
             };
 
             CBUFFER_START(UnityPerMaterial)
@@ -61,33 +59,25 @@ Shader "Pizdec/EchoOutline"
             Varyings vert(Attributes input)
             {
                 Varyings output;
-
-                VertexPositionInputs pos = GetVertexPositionInputs(input.positionOS.xyz);
+                VertexPositionInputs pos = GetVertexPositionInputs(input.positionOS);
                 VertexNormalInputs normal = GetVertexNormalInputs(input.normalOS);
 
-                float3 positionWS = pos.positionWS;
-                positionWS += normal.normalWS * _OutlineWidth;
-
+                float3 positionWS = pos.positionWS + normal.normalWS * _OutlineWidth;
                 output.positionWS = positionWS;
-                output.normalWS = normal.normalWS;
                 output.positionHCS = TransformWorldToHClip(positionWS);
-
                 return output;
             }
 
             half4 frag(Varyings input) : SV_Target
             {
                 float distanceFromEcho = distance(input.positionWS, _EchoPoint.xyz);
-
                 float band = max(_EchoBand, 0.01);
-                float front = 1.0 - smoothstep(_EchoRadius, _EchoRadius + band, distanceFromEcho);
-                float behind = smoothstep(_EchoRadius - band, _EchoRadius, distanceFromEcho);
 
-                float waveMask = front * behind;
-                float facing = 1.0 - saturate(dot(normalize(input.normalWS), normalize(GetWorldSpaceNormalizeViewDir(input.positionWS))));
+                // The outline exists only in the advancing shell of the echo.
+                float reveal = smoothstep(_EchoRadius - band, _EchoRadius, distanceFromEcho);
+                reveal *= 1.0 - smoothstep(_EchoRadius, _EchoRadius + band, distanceFromEcho);
 
-                float alpha = waveMask * (0.65 + facing * 0.35) * _EchoFade * _OutlineColor.a;
-
+                float alpha = reveal * _EchoFade * _OutlineColor.a;
                 if (alpha <= 0.001)
                     discard;
 
