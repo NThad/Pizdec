@@ -25,6 +25,10 @@ Shader "Pizdec/EchoOutline"
             Name "EchoOutline"
             Tags { "LightMode" = "SRPDefaultUnlit" }
 
+            // Classic inverted-hull outline:
+            // the mesh is expanded and only its back faces are drawn.
+            // The target's depth-only pass hides the expanded shell everywhere
+            // except the outside silhouette.
             Cull Front
             ZWrite Off
             ZTest LEqual
@@ -46,7 +50,6 @@ Shader "Pizdec/EchoOutline"
             {
                 float4 positionHCS : SV_POSITION;
                 float3 positionWS : TEXCOORD0;
-                float3 normalWS : TEXCOORD1;
             };
 
             CBUFFER_START(UnityPerMaterial)
@@ -62,40 +65,42 @@ Shader "Pizdec/EchoOutline"
             Varyings vert(Attributes input)
             {
                 Varyings output;
+
                 VertexPositionInputs pos = GetVertexPositionInputs(input.positionOS);
                 VertexNormalInputs normal = GetVertexNormalInputs(input.normalOS);
 
-                float3 positionWS = pos.positionWS + normal.normalWS * _OutlineWidth;
-                output.positionWS = positionWS;
-                output.normalWS = normal.normalWS;
-                output.positionHCS = TransformWorldToHClip(positionWS);
+                float3 expandedPositionWS =
+                    pos.positionWS + normal.normalWS * _OutlineWidth;
+
+                output.positionWS = expandedPositionWS;
+                output.positionHCS = TransformWorldToHClip(expandedPositionWS);
+
                 return output;
             }
 
             half4 frag(Varyings input) : SV_Target
             {
-                float distanceFromEcho = distance(input.positionWS, _EchoPoint.xyz);
-                float revealBand = max(_EchoBand, 0.01);
+                float distanceFromEcho =
+                    distance(input.positionWS, _EchoPoint.xyz);
 
-                // Cumulative reveal: once the wave has passed, the contour stays lit.
+                // Cumulative reveal:
+                // everything behind the wave front remains visible.
+                float revealBand = max(_EchoBand, 0.001);
                 float reveal = 1.0 - smoothstep(
                     _EchoRadius - revealBand,
                     _EchoRadius,
                     distanceFromEcho
                 );
 
-                // Inverted hull + Fresnel: visible pixels are limited to the silhouette.
-                float3 viewDir = normalize(_WorldSpaceCameraPos - input.positionWS);
-                float edge = 1.0 - abs(dot(normalize(input.normalWS), viewDir));
-                edge = smoothstep(0.72, 0.94, edge);
-
-                // Fade starts only after the complete contour has been revealed.
-                // The fade front starts at the original echo contact point.
+                // Fade happens only after the whole contour is revealed.
+                // The fade front starts from the original contact point and
+                // moves outward, leaving already-unreached areas hidden.
                 float fade = 1.0;
 
                 if (_EchoFadeRadius > 0.0)
                 {
-                    float fadeBand = max(_EchoFadeBand, 0.01);
+                    float fadeBand = max(_EchoFadeBand, 0.001);
+
                     fade = 1.0 - smoothstep(
                         _EchoFadeRadius - fadeBand,
                         _EchoFadeRadius,
@@ -103,7 +108,7 @@ Shader "Pizdec/EchoOutline"
                     );
                 }
 
-                float alpha = edge * reveal * fade * _OutlineColor.a;
+                float alpha = reveal * fade * _OutlineColor.a;
 
                 if (alpha <= 0.001)
                     discard;
