@@ -93,10 +93,12 @@ public class EchoTarget : MonoBehaviour
 
             if (active)
             {
-                Material[] invisible = new Material[renderer.sharedMaterials.Length];
-                for (int i = 0; i < invisible.Length; i++)
+                Material[] invisible = new Material[originalMaterials[renderer].Length + 1];
+
+                for (int i = 0; i < originalMaterials[renderer].Length; i++)
                     invisible[i] = invisibleMaterial;
 
+                invisible[invisible.Length - 1] = outlineMaterial;
                 renderer.sharedMaterials = invisible;
             }
             else if (originalMaterials.TryGetValue(renderer, out Material[] original))
