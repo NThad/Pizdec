@@ -19,7 +19,7 @@ public class EchoWave : MonoBehaviour
 
     public void Initialize(float radius, float waveDuration)
     {
-        maxRadius = radius;
+        maxRadius = Mathf.Max(0f, radius);
         duration = Mathf.Max(0.01f, waveDuration);
         currentRadius = 0f;
 
@@ -60,7 +60,7 @@ public class EchoWave : MonoBehaviour
             Vector3 surfacePoint = GetSurfacePoint(origin, direction * currentRadius);
 
             line.SetPosition(i, surfacePoint + Vector3.up * SurfaceOffset);
-            CheckForTargets(surfacePoint);
+            CheckForTargets(surfacePoint, origin);
         }
 
         foreach (KeyValuePair<EchoTarget, Vector3> hit in detectedTargets)
@@ -122,9 +122,17 @@ public class EchoWave : MonoBehaviour
 
     private Vector3 GetSurfacePoint(Vector3 origin, Vector3 offset)
     {
-        Vector3 rayStart = new Vector3(origin.x + offset.x, origin.y + RaycastHeight, origin.z + offset.z);
+        Vector3 rayStart = new Vector3(
+            origin.x + offset.x,
+            origin.y + RaycastHeight,
+            origin.z + offset.z
+        );
 
-        RaycastHit[] hits = Physics.RaycastAll(rayStart, Vector3.down, RaycastHeight * 2f);
+        RaycastHit[] hits = Physics.RaycastAll(
+            rayStart,
+            Vector3.down,
+            RaycastHeight * 2f
+        );
 
         float closestSurfaceY = float.NegativeInfinity;
         bool foundSurface = false;
@@ -143,19 +151,55 @@ public class EchoWave : MonoBehaviour
         }
 
         if (foundSurface)
-            return new Vector3(origin.x + offset.x, closestSurfaceY, origin.z + offset.z);
+        {
+            return new Vector3(
+                origin.x + offset.x,
+                closestSurfaceY,
+                origin.z + offset.z
+            );
+        }
 
-        return new Vector3(origin.x + offset.x, origin.y, origin.z + offset.z);
+        return new Vector3(
+            origin.x + offset.x,
+            origin.y,
+            origin.z + offset.z
+        );
     }
 
-    private void CheckForTargets(Vector3 surfacePoint)
+    private void CheckForTargets(Vector3 surfacePoint, Vector3 origin)
     {
+        // The target check uses a small physical overlap around the wave ring,
+        // but the target itself must also be inside the current wave radius.
+        // This prevents a target from being activated outside maxRadius.
+        Vector3 horizontalOffset = new Vector3(
+            surfacePoint.x - origin.x,
+            0f,
+            surfacePoint.z - origin.z
+        );
+
+        float distanceFromOrigin = horizontalOffset.magnitude;
+
+        if (distanceFromOrigin > maxRadius + TargetCheckRadius)
+            return;
+
         Collider[] colliders = Physics.OverlapSphere(surfacePoint, TargetCheckRadius);
 
         foreach (Collider collider in colliders)
         {
             EchoTarget target = collider.GetComponentInParent<EchoTarget>();
             if (target == null)
+                continue;
+
+            Vector3 targetPosition = target.transform.position;
+            Vector3 targetOffset = new Vector3(
+                targetPosition.x - origin.x,
+                0f,
+                targetPosition.z - origin.z
+            );
+
+            // Do not activate targets whose center is outside the actual
+            // maximum reach of this echo pulse.
+            if (targetOffset.magnitude > maxRadius + TargetCheckRadius)
                 continue;
 
             detectedTargets[target] = surfacePoint;
