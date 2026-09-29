@@ -8,10 +8,12 @@ public class EchoWave : MonoBehaviour
     private float currentRadius;
     private LineRenderer line;
 
+    [Header("Target Detection")]
+    [SerializeField, Min(0f)] private float targetDetectionRadius = 2f;
+
     private const int Points = 96;
     private const float RaycastHeight = 100f;
     private const float SurfaceOffset = 0.08f;
-    private const float TargetCheckRadius = 0.75f;
     private const float DetourAngleStep = 2f;
     private const float MaxDetourAngle = 120f;
 
@@ -168,9 +170,8 @@ public class EchoWave : MonoBehaviour
 
     private void CheckForTargets(Vector3 surfacePoint, Vector3 origin)
     {
-        // The target check uses a small physical overlap around the wave ring,
-        // but the target itself must also be inside the current wave radius.
-        // This prevents a target from being activated outside maxRadius.
+        float detectionRadius = Mathf.Max(0f, targetDetectionRadius);
+
         Vector3 horizontalOffset = new Vector3(
             surfacePoint.x - origin.x,
             0f,
@@ -179,10 +180,12 @@ public class EchoWave : MonoBehaviour
 
         float distanceFromOrigin = horizontalOffset.magnitude;
 
-        if (distanceFromOrigin > maxRadius + TargetCheckRadius)
+        // The actual wave still controls the reveal animation.
+        // Detection radius is only a configurable tolerance around its edge.
+        if (distanceFromOrigin > maxRadius + detectionRadius)
             return;
 
-        Collider[] colliders = Physics.OverlapSphere(surfacePoint, TargetCheckRadius);
+        Collider[] colliders = Physics.OverlapSphere(surfacePoint, detectionRadius);
 
         foreach (Collider collider in colliders)
         {
@@ -197,9 +200,9 @@ public class EchoWave : MonoBehaviour
                 targetPosition.z - origin.z
             );
 
-            // Do not activate targets whose center is outside the actual
-            // maximum reach of this echo pulse.
-            if (targetOffset.magnitude > maxRadius + TargetCheckRadius)
+            // Allow targets to be detected slightly outside the visible wave
+            // by the amount configured in the Inspector.
+            if (targetOffset.magnitude > maxRadius + detectionRadius)
                 continue;
 
             detectedTargets[target] = surfacePoint;
