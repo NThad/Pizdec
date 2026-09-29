@@ -14,32 +14,76 @@ public class EchoTarget : MonoBehaviour
     [Header("Echo Outline")]
     public Color outlineColor = Color.white;
     [Min(0f)] public float outlineWidth = 0.025f;
-    [Min(0f)] public float revealSpeed = 6f;
+    [Min(0.01f)] public float revealSpeed = 6f;
     [Min(0f)] public float fadeSpeed = 2f;
 
     private Renderer[] renderers;
     private MaterialPropertyBlock propertyBlock;
-    private float highlight;
-    private bool highlighted;
+    private Material outlineMaterial;
 
-    private static readonly int BaseColor = Shader.PropertyToID("_BaseColor");
-    private static readonly int ColorProperty = Shader.PropertyToID("_Color");
+    private float echoRadius;
+    private float targetRadius;
+    private float outlineFade;
+    private bool highlighted;
+    private Vector3 echoPoint;
+
+    private static readonly int OutlineColor = Shader.PropertyToID("_OutlineColor");
+    private static readonly int OutlineWidth = Shader.PropertyToID("_OutlineWidth");
+    private static readonly int EchoPoint = Shader.PropertyToID("_EchoPoint");
+    private static readonly int EchoRadius = Shader.PropertyToID("_EchoRadius");
+    private static readonly int EchoBand = Shader.PropertyToID("_EchoBand");
+    private static readonly int EchoFade = Shader.PropertyToID("_EchoFade");
 
     private void Awake()
     {
         renderers = GetComponentsInChildren<Renderer>();
         propertyBlock = new MaterialPropertyBlock();
+
+        Shader shader = Shader.Find("Pizdec/EchoOutline");
+        if (shader == null)
+        {
+            Debug.LogError($"EchoTarget on {gameObject.name}: Pizdec/EchoOutline shader was not found.");
+            return;
+        }
+
+        outlineMaterial = new Material(shader)
+        {
+            name = $"{gameObject.name} Echo Outline"
+        };
+
+        foreach (Renderer renderer in renderers)
+        {
+            Material[] materials = renderer.sharedMaterials;
+            Material[] extended = new Material[materials.Length + 1];
+
+            for (int i = 0; i < materials.Length; i++)
+                extended[i] = materials[i];
+
+            extended[materials.Length] = outlineMaterial;
+            renderer.sharedMaterials = extended;
+        }
     }
 
     private void Update()
     {
-        if (!highlighted)
+        if (!highlighted || outlineMaterial == null)
             return;
 
-        highlight = Mathf.MoveTowards(highlight, 0f, fadeSpeed * Time.deltaTime);
-        ApplyHighlight(highlight);
+        echoRadius = Mathf.MoveTowards(
+            echoRadius,
+            targetRadius,
+            revealSpeed * Time.deltaTime
+        );
 
-        if (highlight <= 0f)
+        outlineFade = Mathf.MoveTowards(
+            outlineFade,
+            0f,
+            fadeSpeed * Time.deltaTime
+        );
+
+        ApplyOutline();
+
+        if (outlineFade <= 0f)
             highlighted = false;
     }
 
@@ -55,29 +99,38 @@ public class EchoTarget : MonoBehaviour
 
     public void OnEchoDetected()
     {
+        OnEchoHit(transform.position, Vector3.zero, 0f);
+    }
+
+    public void OnEchoHit(Vector3 contactPoint, Vector3 waveDirection, float waveRadius)
+    {
+        echoPoint = contactPoint;
+        targetRadius = Mathf.Max(0f, waveRadius);
+        echoRadius = Mathf.Min(echoRadius, targetRadius);
+        outlineFade = 1f;
         highlighted = true;
-        highlight = 1f;
-        ApplyHighlight(highlight);
+
+        ApplyOutline();
+
         Debug.Log($"ECHO detected: {gameObject.name}");
     }
 
-    public void OnEchoHit(Vector3 contactPoint, Vector3 waveDirection)
+    private void ApplyOutline()
     {
-        // Contact data is kept in the API so EchoWave can drive a spatial
-        // outline later without changing the detection contract again.
-        OnEchoDetected();
+        if (outlineMaterial == null)
+            return;
+
+        outlineMaterial.SetColor(OutlineColor, outlineColor);
+        outlineMaterial.SetFloat(OutlineWidth, outlineWidth);
+        outlineMaterial.SetVector(EchoPoint, echoPoint);
+        outlineMaterial.SetFloat(EchoRadius, echoRadius);
+        outlineMaterial.SetFloat(EchoBand, Mathf.Max(outlineWidth * 10f, 0.25f));
+        outlineMaterial.SetFloat(EchoFade, outlineFade);
     }
 
-    private void ApplyHighlight(float intensity)
+    private void OnDestroy()
     {
-        Color color = outlineColor * intensity;
-
-        foreach (Renderer renderer in renderers)
-        {
-            renderer.GetPropertyBlock(propertyBlock);
-            propertyBlock.SetColor(BaseColor, color);
-            propertyBlock.SetColor(ColorProperty, color);
-            renderer.SetPropertyBlock(propertyBlock);
-        }
+        if (outlineMaterial != null)
+            Destroy(outlineMaterial);
     }
 }
