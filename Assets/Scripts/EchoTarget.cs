@@ -22,7 +22,7 @@ public class EchoTarget : MonoBehaviour
     private float revealRadius;
     private float targetRadius;
     private float fadeRadius;
-    private float fadeOpacity = 1f;
+    private float fadeOpacity = 0f;
     private bool revealComplete;
     private bool highlighted;
     private bool echoVisionActive;
@@ -49,12 +49,19 @@ public class EchoTarget : MonoBehaviour
             return;
         }
 
+        Shader invisibleShader = Shader.Find("Pizdec/EchoInvisible");
+        if (invisibleShader == null)
+        {
+            Debug.LogError($"EchoTarget on {gameObject.name}: Pizdec/EchoInvisible shader was not found.");
+            return;
+        }
+
         outlineMaterial = new Material(shader)
         {
             name = $"{gameObject.name} Echo Outline"
         };
 
-        invisibleMaterial = new Material(Shader.Find("Pizdec/EchoInvisible"))
+        invisibleMaterial = new Material(invisibleShader)
         {
             name = $"{gameObject.name} Echo Invisible"
         };
@@ -71,6 +78,8 @@ public class EchoTarget : MonoBehaviour
             extended[materials.Length] = outlineMaterial;
             renderer.sharedMaterials = extended;
         }
+
+        outlineMaterial.SetFloat(EchoOpacity, 0f);
     }
 
     private void Update()
@@ -80,8 +89,6 @@ public class EchoTarget : MonoBehaviour
 
         if (!revealComplete)
         {
-            // The wave itself controls the reveal speed. Do not let the target
-            // reveal independently, otherwise large/small objects drift out of sync.
             if (revealRadius >= targetRadius)
             {
                 revealRadius = targetRadius;
@@ -102,19 +109,25 @@ public class EchoTarget : MonoBehaviour
             fadeRadius = Mathf.MoveTowards(fadeRadius, targetRadius, fadeSpeed * Time.deltaTime);
             fadeOpacity = 1f - Mathf.Clamp01(fadeRadius / Mathf.Max(targetRadius, 0.001f));
 
+            ApplyOutline();
+
             if (fadeRadius >= targetRadius)
             {
                 highlighted = false;
                 revealComplete = false;
                 revealRadius = 0f;
+                targetRadius = 0f;
                 fadeRadius = 0f;
                 fadeOpacity = 0f;
+                glowTimer = 0f;
 
-                // Explicitly clear the shader after the fade is complete.
+                // Force the material fully invisible after the last fade frame.
+                outlineMaterial.SetFloat(EchoOpacity, 0f);
                 outlineMaterial.SetFloat(EchoRadius, 0f);
                 outlineMaterial.SetFloat(EchoFadeRadius, 0f);
-                return;
             }
+
+            return;
         }
 
         ApplyOutline();
@@ -142,6 +155,7 @@ public class EchoTarget : MonoBehaviour
             else if (originalMaterials.TryGetValue(renderer, out Material[] original))
             {
                 Material[] restored = new Material[original.Length + 1];
+
                 for (int i = 0; i < original.Length; i++)
                     restored[i] = original[i];
 
@@ -157,14 +171,15 @@ public class EchoTarget : MonoBehaviour
             revealRadius = 0f;
             targetRadius = 0f;
             fadeRadius = 0f;
-            fadeOpacity = 1f;
+            fadeOpacity = 0f;
             glowTimer = 0f;
 
             if (outlineMaterial != null)
             {
+                outlineMaterial.SetFloat(EchoRadius, 0f);
                 outlineMaterial.SetFloat(EchoFadeRadius, 0f);
                 outlineMaterial.SetFloat(EchoFadeBand, revealBand);
-        outlineMaterial.SetFloat(EchoOpacity, fadeOpacity);
+                outlineMaterial.SetFloat(EchoOpacity, 0f);
             }
         }
     }
@@ -188,14 +203,12 @@ public class EchoTarget : MonoBehaviour
             glowTimer = 0f;
             revealComplete = false;
             highlighted = true;
+            fadeOpacity = 1f;
         }
 
-        // Once the contour is fully revealed, subsequent echoes must not
-        // restart or otherwise interfere with the hold/fade state.
         if (revealComplete)
             return;
 
-        // Keep the shader reveal locked to the actual wave front.
         revealRadius = Mathf.Min(targetRadius, Mathf.Max(revealRadius, waveRadius));
 
         if (revealRadius >= targetRadius)
@@ -204,6 +217,7 @@ public class EchoTarget : MonoBehaviour
             revealComplete = true;
             glowTimer = glowHoldTime;
             fadeRadius = 0f;
+            fadeOpacity = 1f;
         }
 
         ApplyOutline();
@@ -234,6 +248,8 @@ public class EchoTarget : MonoBehaviour
             new Vector3(max.x, max.y, min.z),
             new Vector3(max.x, max.y, max.z)
         };
+
+        float maxDistance = 0f;
 
         foreach (Vector3 corner in corners)
             maxDistance = Mathf.Max(maxDistance, Vector3.Distance(point, corner));
