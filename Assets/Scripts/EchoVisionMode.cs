@@ -11,6 +11,13 @@ public class EchoVisionMode : MonoBehaviour
 
     private readonly List<Renderer> hiddenRenderers = new List<Renderer>();
     private readonly List<EchoTarget> targets = new List<EchoTarget>();
+    private readonly Dictionary<Camera, CameraState> cameraStates = new Dictionary<Camera, CameraState>();
+
+    private struct CameraState
+    {
+        public CameraClearFlags clearFlags;
+        public Color backgroundColor;
+    }
 
     private void Awake()
     {
@@ -37,6 +44,7 @@ public class EchoVisionMode : MonoBehaviour
     {
         hiddenRenderers.Clear();
         targets.Clear();
+        SetBlackBackground(true);
 
         EchoTarget[] foundTargets = FindObjectsByType<EchoTarget>(FindObjectsSortMode.None);
         targets.AddRange(foundTargets);
@@ -78,6 +86,7 @@ public class EchoVisionMode : MonoBehaviour
         }
 
         hiddenRenderers.Clear();
+        SetBlackBackground(false);
 
         foreach (EchoTarget target in targets)
         {
@@ -86,6 +95,44 @@ public class EchoVisionMode : MonoBehaviour
         }
 
         targets.Clear();
+    }
+
+    private void SetBlackBackground(bool active)
+    {
+        Camera[] cameras = FindObjectsByType<Camera>(FindObjectsSortMode.None);
+
+        if (active)
+        {
+            cameraStates.Clear();
+
+            foreach (Camera camera in cameras)
+            {
+                if (camera == null)
+                    continue;
+
+                cameraStates[camera] = new CameraState
+                {
+                    clearFlags = camera.clearFlags,
+                    backgroundColor = camera.backgroundColor
+                };
+
+                camera.clearFlags = CameraClearFlags.SolidColor;
+                camera.backgroundColor = Color.black;
+            }
+        }
+        else
+        {
+            foreach (KeyValuePair<Camera, CameraState> state in cameraStates)
+            {
+                if (state.Key == null)
+                    continue;
+
+                state.Key.clearFlags = state.Value.clearFlags;
+                state.Key.backgroundColor = state.Value.backgroundColor;
+            }
+
+            cameraStates.Clear();
+        }
     }
 
     private void OnDestroy()
