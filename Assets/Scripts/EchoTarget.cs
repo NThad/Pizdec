@@ -12,6 +12,7 @@ public class EchoTarget : MonoBehaviour
     public Color outlineColor = Color.white;
     [Min(0.001f)] public float outlineWidth = 0.025f;
     [Min(0.01f)] public float revealSpeed = 8f;
+    [Min(0f)] public float glowHoldTime = 1.5f;
     [Min(0f)] public float fadeSpeed = 2f;
     [Min(0.01f)] public float revealBand = 1.25f;
 
@@ -25,6 +26,7 @@ public class EchoTarget : MonoBehaviour
     private bool revealComplete;
     private bool highlighted;
     private bool echoVisionActive;
+    private float glowTimer;
     private Vector3 echoPoint;
 
     private static readonly int OutlineColor = Shader.PropertyToID("_OutlineColor");
@@ -77,17 +79,25 @@ public class EchoTarget : MonoBehaviour
 
         if (!revealComplete)
         {
-            revealRadius = Mathf.MoveTowards(revealRadius, targetRadius, revealSpeed * Time.deltaTime);
-
+            // The wave itself controls the reveal speed. Do not let the target
+            // reveal independently, otherwise large/small objects drift out of sync.
             if (revealRadius >= targetRadius)
             {
                 revealRadius = targetRadius;
                 revealComplete = true;
+                glowTimer = glowHoldTime;
                 fadeRadius = 0f;
             }
         }
         else
         {
+            if (glowTimer > 0f)
+            {
+                glowTimer = Mathf.Max(0f, glowTimer - Time.deltaTime);
+                ApplyOutline();
+                return;
+            }
+
             fadeRadius = Mathf.MoveTowards(fadeRadius, targetRadius, fadeSpeed * Time.deltaTime);
 
             if (fadeRadius >= targetRadius)
@@ -134,6 +144,7 @@ public class EchoTarget : MonoBehaviour
             revealRadius = 0f;
             targetRadius = 0f;
             fadeRadius = 0f;
+            glowTimer = 0f;
 
             if (outlineMaterial != null)
             {
@@ -159,11 +170,22 @@ public class EchoTarget : MonoBehaviour
             revealRadius = waveRadius;
             targetRadius = GetMaxDistanceFromPoint(echoPoint);
             fadeRadius = 0f;
+            glowTimer = 0f;
             revealComplete = false;
             highlighted = true;
         }
 
+        // Keep the shader reveal locked to the actual wave front.
         revealRadius = Mathf.Max(revealRadius, waveRadius);
+
+        if (!revealComplete && revealRadius >= targetRadius)
+        {
+            revealRadius = targetRadius;
+            revealComplete = true;
+            glowTimer = glowHoldTime;
+            fadeRadius = 0f;
+        }
+
         ApplyOutline();
     }
 
