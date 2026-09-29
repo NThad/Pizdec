@@ -121,7 +121,6 @@ public class EchoTarget : MonoBehaviour
                 fadeOpacity = 0f;
                 glowTimer = 0f;
 
-                // Force the material fully invisible after the last fade frame.
                 outlineMaterial.SetFloat(EchoOpacity, 0f);
                 outlineMaterial.SetFloat(EchoRadius, 0f);
                 outlineMaterial.SetFloat(EchoFadeRadius, 0f);
@@ -236,7 +235,6 @@ public class EchoTarget : MonoBehaviour
         Vector3 min = bounds.min;
         Vector3 max = bounds.max;
 
-        float maxDistance = 0f;
         Vector3[] corners =
         {
             new Vector3(min.x, min.y, min.z),
