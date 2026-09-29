@@ -23,7 +23,7 @@ public class EchoTarget : MonoBehaviour
     private bool highlighted;
 
     private static readonly int BaseColor = Shader.PropertyToID("_BaseColor");
-    private static readonly int Color = Shader.PropertyToID("_Color");
+    private static readonly int ColorProperty = Shader.PropertyToID("_Color");
 
     private void Awake()
     {
@@ -76,7 +76,7 @@ public class EchoTarget : MonoBehaviour
         {
             renderer.GetPropertyBlock(propertyBlock);
             propertyBlock.SetColor(BaseColor, color);
-            propertyBlock.SetColor(Color, color);
+            propertyBlock.SetColor(ColorProperty, color);
             renderer.SetPropertyBlock(propertyBlock);
         }
     }
