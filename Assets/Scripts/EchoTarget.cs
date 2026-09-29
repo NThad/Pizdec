@@ -22,6 +22,7 @@ public class EchoTarget : MonoBehaviour
     private float revealRadius;
     private float targetRadius;
     private float outlineFade;
+    private float fadeStartRadius;
     private bool highlighted;
     private bool echoVisionActive;
     private Vector3 echoPoint;
@@ -74,7 +75,9 @@ public class EchoTarget : MonoBehaviour
             return;
 
         revealRadius = Mathf.MoveTowards(revealRadius, targetRadius, revealSpeed * Time.deltaTime);
-        outlineFade = Mathf.MoveTowards(outlineFade, 0f, fadeSpeed * Time.deltaTime);
+
+        if (revealRadius >= fadeStartRadius)
+            outlineFade = Mathf.MoveTowards(outlineFade, 0f, fadeSpeed * Time.deltaTime);
 
         ApplyOutline();
 
@@ -115,6 +118,9 @@ public class EchoTarget : MonoBehaviour
         {
             highlighted = false;
             outlineFade = 0f;
+            revealRadius = 0f;
+            targetRadius = 0f;
+            fadeStartRadius = 0f;
             if (outlineMaterial != null)
                 outlineMaterial.SetFloat(EchoFade, 0f);
         }
@@ -130,13 +136,48 @@ public class EchoTarget : MonoBehaviour
 
     public void OnEchoHit(Vector3 contactPoint, Vector3 waveDirection, float waveRadius)
     {
-        echoPoint = contactPoint;
-        targetRadius = Mathf.Max(targetRadius, waveRadius);
-        revealRadius = Mathf.Min(revealRadius, targetRadius);
-        outlineFade = 1f;
-        highlighted = true;
+        if (!highlighted)
+        {
+            echoPoint = contactPoint;
+            revealRadius = waveRadius;
+            fadeStartRadius = GetMaxDistanceFromPoint(echoPoint);
+            outlineFade = 1f;
+            highlighted = true;
+        }
 
+        targetRadius = Mathf.Max(targetRadius, waveRadius);
         ApplyOutline();
+    }
+
+    private float GetMaxDistanceFromPoint(Vector3 point)
+    {
+        Bounds bounds = new Bounds(transform.position, Vector3.zero);
+        foreach (Renderer renderer in renderers)
+        {
+            if (renderer != null)
+                bounds.Encapsulate(renderer.bounds);
+        }
+
+        Vector3 min = bounds.min;
+        Vector3 max = bounds.max;
+
+        float maxDistance = 0f;
+        Vector3[] corners =
+        {
+            new Vector3(min.x, min.y, min.z),
+            new Vector3(min.x, min.y, max.z),
+            new Vector3(min.x, max.y, min.z),
+            new Vector3(min.x, max.y, max.z),
+            new Vector3(max.x, min.y, min.z),
+            new Vector3(max.x, min.y, max.z),
+            new Vector3(max.x, max.y, min.z),
+            new Vector3(max.x, max.y, max.z)
+        };
+
+        foreach (Vector3 corner in corners)
+            maxDistance = Mathf.Max(maxDistance, Vector3.Distance(point, corner));
+
+        return maxDistance;
     }
 
     private void ApplyOutline()
