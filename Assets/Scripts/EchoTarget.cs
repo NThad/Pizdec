@@ -130,8 +130,6 @@ public class EchoTarget : MonoBehaviour
 
     public void OnEchoHit(Vector3 contactPoint, Vector3 waveDirection, float waveRadius)
     {
-        if (!echoVisionActive)
-            return;
         echoPoint = contactPoint;
         targetRadius = Mathf.Max(targetRadius, waveRadius);
         revealRadius = Mathf.Min(revealRadius, targetRadius);
