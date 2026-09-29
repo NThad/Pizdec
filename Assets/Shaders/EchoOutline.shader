@@ -27,6 +27,7 @@ Shader "Pizdec/EchoOutline"
             Cull Front
             ZWrite Off
             ZTest LEqual
+            Offset -1, -1
             Blend SrcAlpha OneMinusSrcAlpha
 
             HLSLPROGRAM
@@ -85,7 +86,7 @@ Shader "Pizdec/EchoOutline"
                 float waveMask = front * behind;
                 float facing = 1.0 - saturate(dot(normalize(input.normalWS), normalize(GetWorldSpaceNormalizeViewDir(input.positionWS))));
 
-                float alpha = waveMask * (0.35 + facing * 0.65) * _EchoFade * _OutlineColor.a;
+                float alpha = waveMask * (0.65 + facing * 0.35) * _EchoFade * _OutlineColor.a;
 
                 if (alpha <= 0.001)
                     discard;
