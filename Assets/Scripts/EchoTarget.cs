@@ -100,7 +100,17 @@ public class EchoTarget : MonoBehaviour
             fadeRadius = Mathf.MoveTowards(fadeRadius, targetRadius, fadeSpeed * Time.deltaTime);
 
             if (fadeRadius >= targetRadius)
+            {
                 highlighted = false;
+                revealComplete = false;
+                revealRadius = 0f;
+                fadeRadius = 0f;
+
+                // Explicitly clear the shader after the fade is complete.
+                outlineMaterial.SetFloat(EchoRadius, 0f);
+                outlineMaterial.SetFloat(EchoFadeRadius, 0f);
+                return;
+            }
         }
 
         ApplyOutline();
