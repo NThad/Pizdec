@@ -101,7 +101,11 @@ Shader "Pizdec/EchoOutline"
                 {
                     float fadeBand = max(_EchoFadeBand, 0.001);
 
-                    fade = 1.0 - smoothstep(
+                    // Fade from the original contact point outward.
+                    // Near the contact point the outline disappears first,
+                    // while farther parts remain visible until the fade front
+                    // reaches them.
+                    fade = smoothstep(
                         _EchoFadeRadius - fadeBand,
                         _EchoFadeRadius,
                         distanceFromEcho
