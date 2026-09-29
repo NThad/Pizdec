@@ -22,6 +22,7 @@ public class EchoTarget : MonoBehaviour
     private float revealRadius;
     private float targetRadius;
     private float fadeRadius;
+    private float fadeOpacity = 1f;
     private bool revealComplete;
     private bool highlighted;
     private bool echoVisionActive;
@@ -35,6 +36,7 @@ public class EchoTarget : MonoBehaviour
     private static readonly int EchoBand = Shader.PropertyToID("_EchoBand");
     private static readonly int EchoFadeRadius = Shader.PropertyToID("_EchoFadeRadius");
     private static readonly int EchoFadeBand = Shader.PropertyToID("_EchoFadeBand");
+    private static readonly int EchoOpacity = Shader.PropertyToID("_EchoOpacity");
 
     private void Awake()
     {
@@ -98,6 +100,7 @@ public class EchoTarget : MonoBehaviour
             }
 
             fadeRadius = Mathf.MoveTowards(fadeRadius, targetRadius, fadeSpeed * Time.deltaTime);
+            fadeOpacity = 1f - Mathf.Clamp01(fadeRadius / Mathf.Max(targetRadius, 0.001f));
 
             if (fadeRadius >= targetRadius)
             {
@@ -105,6 +108,7 @@ public class EchoTarget : MonoBehaviour
                 revealComplete = false;
                 revealRadius = 0f;
                 fadeRadius = 0f;
+                fadeOpacity = 0f;
 
                 // Explicitly clear the shader after the fade is complete.
                 outlineMaterial.SetFloat(EchoRadius, 0f);
@@ -153,12 +157,14 @@ public class EchoTarget : MonoBehaviour
             revealRadius = 0f;
             targetRadius = 0f;
             fadeRadius = 0f;
+            fadeOpacity = 1f;
             glowTimer = 0f;
 
             if (outlineMaterial != null)
             {
                 outlineMaterial.SetFloat(EchoFadeRadius, 0f);
                 outlineMaterial.SetFloat(EchoFadeBand, revealBand);
+        outlineMaterial.SetFloat(EchoOpacity, fadeOpacity);
             }
         }
     }
