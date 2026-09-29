@@ -8,10 +8,18 @@ public enum SoundType
     Other
 }
 
+public enum SoundMode
+{
+    Normal,
+    Echo
+}
+
 public class SoundSource : MonoBehaviour
 {
     [Header("Sound")]
     public SoundType soundType = SoundType.Other;
+
+    public SoundMode soundMode = SoundMode.Normal;
 
     [Min(0f)]
     public float soundPower = 1f;
@@ -51,5 +59,13 @@ public class SoundSource : MonoBehaviour
 
         float t = Mathf.InverseLerp(largeRadius, smallRadius, distance);
         return soundPower * t;
+    }
+
+    public void EmitEcho()
+    {
+        if (soundMode != SoundMode.Echo)
+            return;
+
+        Debug.Log($"ECHO emitted from {gameObject.name}. Radius: {largeRadius}, Power: {soundPower}");
     }
 }
