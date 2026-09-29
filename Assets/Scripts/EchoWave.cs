@@ -181,7 +181,7 @@ public class EchoWave : MonoBehaviour
                 continue;
 
             detectedTargets.Add(target);
-            target.OnEchoDetected();
+            target.OnEchoHit(surfacePoint, surfacePoint - transform.position, currentRadius);
         }
     }
 }
