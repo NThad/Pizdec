@@ -16,6 +16,8 @@ public class EchoTarget : MonoBehaviour
 
     private Renderer[] renderers;
     private Material outlineMaterial;
+    private Material invisibleMaterial;
+    private readonly Dictionary<Renderer, Material[]> originalMaterials = new Dictionary<Renderer, Material[]>();
     private float revealRadius;
     private float targetRadius;
     private float outlineFade;
@@ -46,9 +48,15 @@ public class EchoTarget : MonoBehaviour
             name = $"{gameObject.name} Echo Outline"
         };
 
+        invisibleMaterial = new Material(Shader.Find("Pizdec/EchoInvisible"))
+        {
+            name = $"{gameObject.name} Echo Invisible"
+        };
+
         foreach (Renderer renderer in renderers)
         {
             Material[] materials = renderer.sharedMaterials;
+            originalMaterials[renderer] = materials;
             Material[] extended = new Material[materials.Length + 1];
 
             for (int i = 0; i < materials.Length; i++)
@@ -76,6 +84,30 @@ public class EchoTarget : MonoBehaviour
     public void SetEchoVisionActive(bool active)
     {
         echoVisionActive = active;
+
+        foreach (Renderer renderer in renderers)
+        {
+            if (renderer == null)
+                continue;
+
+            if (active)
+            {
+                Material[] invisible = new Material[renderer.sharedMaterials.Length];
+                for (int i = 0; i < invisible.Length; i++)
+                    invisible[i] = invisibleMaterial;
+
+                renderer.sharedMaterials = invisible;
+            }
+            else if (originalMaterials.TryGetValue(renderer, out Material[] original))
+            {
+                Material[] restored = new Material[original.Length + 1];
+                for (int i = 0; i < original.Length; i++)
+                    restored[i] = original[i];
+
+                restored[original.Length] = outlineMaterial;
+                renderer.sharedMaterials = restored;
+            }
+        }
         if (!active)
         {
             highlighted = false;
@@ -123,5 +155,7 @@ public class EchoTarget : MonoBehaviour
     {
         if (outlineMaterial != null)
             Destroy(outlineMaterial);
+        if (invisibleMaterial != null)
+            Destroy(invisibleMaterial);
     }
 }
