@@ -3,25 +3,20 @@ using UnityEngine;
 public class EchoTarget : MonoBehaviour
 {
     [Header("Sound Interaction")]
-    [Range(0f, 1f)]
-    public float absorption = 0.5f;
-
-    [Range(0f, 1f)]
-    public float reflection = 0.5f;
-
+    [Range(0f, 1f)] public float absorption = 0.5f;
+    [Range(0f, 1f)] public float reflection = 0.5f;
     public bool blocksSound = true;
 
     [Header("Echo Outline")]
     public Color outlineColor = Color.white;
-    [Min(0f)] public float outlineWidth = 0.025f;
-    [Min(0.01f)] public float revealSpeed = 6f;
+    [Min(0.001f)] public float outlineWidth = 0.025f;
+    [Min(0.01f)] public float revealSpeed = 8f;
     [Min(0f)] public float fadeSpeed = 2f;
+    [Min(0.01f)] public float revealBand = 1.25f;
 
     private Renderer[] renderers;
-    private MaterialPropertyBlock propertyBlock;
     private Material outlineMaterial;
-
-    private float echoRadius;
+    private float revealRadius;
     private float targetRadius;
     private float outlineFade;
     private bool highlighted;
@@ -37,7 +32,6 @@ public class EchoTarget : MonoBehaviour
     private void Awake()
     {
         renderers = GetComponentsInChildren<Renderer>();
-        propertyBlock = new MaterialPropertyBlock();
 
         Shader shader = Shader.Find("Pizdec/EchoOutline");
         if (shader == null)
@@ -69,17 +63,8 @@ public class EchoTarget : MonoBehaviour
         if (!highlighted || outlineMaterial == null)
             return;
 
-        echoRadius = Mathf.MoveTowards(
-            echoRadius,
-            targetRadius,
-            revealSpeed * Time.deltaTime
-        );
-
-        outlineFade = Mathf.MoveTowards(
-            outlineFade,
-            0f,
-            fadeSpeed * Time.deltaTime
-        );
+        revealRadius = Mathf.MoveTowards(revealRadius, targetRadius, revealSpeed * Time.deltaTime);
+        outlineFade = Mathf.MoveTowards(outlineFade, 0f, fadeSpeed * Time.deltaTime);
 
         ApplyOutline();
 
@@ -87,15 +72,8 @@ public class EchoTarget : MonoBehaviour
             highlighted = false;
     }
 
-    public float GetReflection()
-    {
-        return reflection;
-    }
-
-    public float GetAbsorption()
-    {
-        return absorption;
-    }
+    public float GetReflection() => reflection;
+    public float GetAbsorption() => absorption;
 
     public void OnEchoDetected()
     {
@@ -105,14 +83,12 @@ public class EchoTarget : MonoBehaviour
     public void OnEchoHit(Vector3 contactPoint, Vector3 waveDirection, float waveRadius)
     {
         echoPoint = contactPoint;
-        targetRadius = Mathf.Max(0f, waveRadius);
-        echoRadius = Mathf.Min(echoRadius, targetRadius);
+        targetRadius = Mathf.Max(targetRadius, waveRadius);
+        revealRadius = Mathf.Min(revealRadius, targetRadius);
         outlineFade = 1f;
         highlighted = true;
 
         ApplyOutline();
-
-        Debug.Log($"ECHO detected: {gameObject.name}");
     }
 
     private void ApplyOutline()
@@ -123,8 +99,8 @@ public class EchoTarget : MonoBehaviour
         outlineMaterial.SetColor(OutlineColor, outlineColor);
         outlineMaterial.SetFloat(OutlineWidth, outlineWidth);
         outlineMaterial.SetVector(EchoPoint, echoPoint);
-        outlineMaterial.SetFloat(EchoRadius, echoRadius);
-        outlineMaterial.SetFloat(EchoBand, Mathf.Max(outlineWidth * 10f, 0.25f));
+        outlineMaterial.SetFloat(EchoRadius, revealRadius);
+        outlineMaterial.SetFloat(EchoBand, revealBand);
         outlineMaterial.SetFloat(EchoFade, outlineFade);
     }
 
